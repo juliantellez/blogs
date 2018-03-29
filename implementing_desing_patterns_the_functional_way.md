@@ -1,0 +1,1 @@
+Implementing Design Patterns - The Functional Way
