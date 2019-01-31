@@ -1,4 +1,10 @@
 # Handling complexity in lambda functions
+<p style="font-size:10px; text-align:right; margin: 0;">1st Feb 2019</p>
+<p style="font-size:10px; text-align:right">5min</p>
+
+# TLDR;
+
+
 
 I have had the luck and pleasure of working with lambda functions recently and boy I am having fun! The idea of having an event driven execution environment is both daring and exciting.
 
