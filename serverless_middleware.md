@@ -2,8 +2,8 @@
 <p style="font-size:10px; text-align:right; margin: 0;">1st Feb 2019</p>
 <p style="font-size:10px; text-align:right">5min</p>
 
-# TLDR;
-
+### TLDR;
+> Middlewares can handle the complexity of your lambdas while isolating business logic and cross-cutting concerns in reusable components that can be modeled by event cycles.
 
 
 I have had the luck and pleasure of working with lambda functions recently and boy I am having fun! The idea of having an event driven execution environment is both daring and exciting.
@@ -46,7 +46,7 @@ A lambda [middleware](https://en.wikipedia.org/wiki/Middleware) is essentially a
     <img src="https://media.giphy.com/media/3sZlRwZfxAI8g/giphy.gif" height=200>
 </div>
 
-# Enter Lambcycle
+## Enter Lambcycle
 
 [Lambcycle](https://github.com/juliantellez/lambcycle) 🐑 🛵 is a declarative middleware for lambda functions. It defines a configurable event cycle and allows you to focus on your application's logic. It has a "Feature as Plugin" approach, so you can easily create your own plugins or reuse your favorite packages with very little effort.
 
@@ -56,11 +56,14 @@ A lambda [middleware](https://en.wikipedia.org/wiki/Middleware) is essentially a
 
 In practice there is no such a thing as an un-opinionated framework, every idea is an opinion and a way of working with your application. Lambcycle is created around the idea that configuration is better than code and that business logic should be as isolated as possible. It's main goal is to shift the conversation around predictable cycles while promoting reusability and consistent error handling across all functions and teams.
 
-Lambcycle is built with [developer experience "DX"](https://hackernoon.com/the-best-practices-for-a-great-developer-experience-dx-9036834382b0) in mind and ships with [type](https://www.typescriptlang.org) definitions, to promote a smoother adoption 🚀 (VScode only).
+Lambcycle is built with [developer experience "DX"](https://hackernoon.com/the-best-practices-for-a-great-developer-experience-dx-9036834382b0) in mind and ships with [type](https://www.typescriptlang.org) definitions, for auto-completion 🚀 (VScode only).
 
 <div align="center" style="padding: 15px">
     <img src="https://user-images.githubusercontent.com/4896851/51274743-db4db500-19c7-11e9-903c-cb50d127d933.gif" width=600>
 </div>
 
-# Summary
+## Conclusion
+
+It is a brave new world and serverless is here to stay! promoting reusable components and consistent error handling will help you and your team create and support features in an more controlled and organised fashion.
+
 
