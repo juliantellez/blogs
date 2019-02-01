@@ -16,7 +16,7 @@ As you can see, (because you checked at least one of the links, didn't you?) A h
 
 Generally speaking, when writing lambda functions you would organise them into a series of dedicated modules following the [single responsibility principle](https://en.wikipedia.org/wiki/Single_responsibility_principle). If you would rather do otherwise, please read this excellent blog comparing [monolithic vs single purposed functions](https://hackernoon.com/aws-lambda-should-you-have-few-monolithic-functions-or-many-single-purposed-functions-8c3872d4338f). Isolating application from business logic reduces code complexity, simplifies reasoning and will help you debug your code more efficiently. Your colleagues and your future self will thank you.
 
-Take for example some sort of CRUD api, we would like to make sure that a payload is properly formatted before handling any data. The payload validation could emit an error that would communicate a status to the consumer. If the validation was successful it would then move onto executing some business logic. For both scenarios we would also want to set up some percentile tracing and error loggings. While all of these sound great, we have essentially mapped out a request lifecycle with various [cross-cutting concerns](https://en.wikipedia.org/wiki/Cross-cutting_concern):
+Take for example some sort of CRUD API, we would like to make sure that a payload is properly formatted before handling any data. The payload validation could emit an error that would communicate a status to the consumer. If the validation was successful it would then move onto executing some business logic. For both scenarios we would also want to set up some percentile tracing and error loggings. While all of these sound great, we have essentially mapped out a request lifecycle with various [cross-cutting concerns](https://en.wikipedia.org/wiki/Cross-cutting_concern):
 
 - Data validation.
 - Error detection and correction.
@@ -35,7 +35,7 @@ Of course this isn't a new concept and we have been using it in web frameworks l
 A lambda [middleware](https://en.wikipedia.org/wiki/Middleware) is essentially a function that contributes to managing cross-cutting concerns in a consistent manner. It provides a clear separation of application and business logic and outlines an easy to reason configuration cycle. It is the glue that when adopted by everyone in a team becomes the lingua franca that supports and creates features. But do we really need a middleware? Well, look at the current state of your lambdas and ask yourself a few questions:
 
  - What does the code look like?
- - can you envision anyone supporting it in at least 2 years?
+ - Can you envision anyone supporting it in at least 2 years?
  - How much business logic expertise do you need? (if specialised then separation is imperative)
  - Is logic intertwined and hard to reason about?
  - Does the project have a clear path or do you see it going in different directions?
@@ -64,6 +64,5 @@ Lambcycle is built with [developer experience "DX"](https://hackernoon.com/the-b
 
 ## Conclusion
 
-It is a brave new world and serverless is here to stay! promoting reusable components and consistent error handling will help you and your team create and support features in an more controlled and organised fashion.
-
+It is a brave new world and serverless is here to stay! Promoting reusable components and consistent error handling will help you and your team create and support features in an more controlled and organised fashion.
 
