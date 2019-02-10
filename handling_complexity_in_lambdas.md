@@ -1,6 +1,6 @@
 # Handling complexity in lambda functions
-<p style="font-size:10px; text-align:right; margin: 0;">1st Feb 2019</p>
-<p style="font-size:10px; text-align:right">5min</p>
+<p style="font-size:10px; text-align:right; margin: 0;">6st Feb 2019</p>
+<p style="font-size:10px; text-align:right">8min</p>
 
 ### TLDR;
 > Middlewares can handle the complexity of your lambdas while isolating business logic and cross-cutting concerns in reusable components that can be modeled by event cycles.
@@ -50,13 +50,116 @@ A lambda [middleware](https://en.wikipedia.org/wiki/Middleware) is essentially a
 
 [Lambcycle](https://github.com/juliantellez/lambcycle) 🐑 🛵 is a declarative middleware for lambda functions. It defines a configurable event cycle and allows you to focus on your application's logic. It has a "Feature as Plugin" approach, so you can easily create your own plugins or reuse your favorite packages with very little effort.
 
+In practice there is no such a thing as an un-opinionated framework, every idea is an opinion and a way of working with your application. Lambcycle favours configuration over code and believes that business logic should be as isolated as possible. 
+
 <div align="center" style="padding: 15px">
-    <img src="https://raw.githubusercontent.com/juliantellez/lambcycle/develop/assets/lifecycle.svg?sanitize=true" width=400>
+    <img src="./assets/lambcycle-lifecycle.png" width=400>
 </div>
 
-In practice there is no such a thing as an un-opinionated framework, every idea is an opinion and a way of working with your application. Lambcycle is created around the idea that configuration is better than code and that business logic should be as isolated as possible. It's main goal is to shift the conversation around predictable cycles while promoting reusability and consistent error handling across all functions and teams.
+Lambcycle enhances lambda functions with a few extension points (see graph), each of which can be used to interact with the event in a decomposed manner.
 
-Lambcycle is built with [developer experience "DX"](https://hackernoon.com/the-best-practices-for-a-great-developer-experience-dx-9036834382b0) in mind and ships with [type](https://www.typescriptlang.org) definitions, for auto-completion 🚀 (VScode only).
+- The first extension point is `Request` which occurs immediately after the lambda is called. You can use this step for parsing, validation, etc...
+Note: If you are thinking of auth, please consider a [lambda authoriser](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-use-lambda-authorizer.html) instead. 
+
+- The `Pre Handler` extension comes in handy when you need to adapt data to fit an interface. Its also a great place for fetching secrets.
+
+- The `Handler`, where your beautiful business logic lives.
+
+- Next up is the `Post Handler`, use this extension to validate and/or cache the output of your business logic.
+
+- `Error` is an implicit extension for logging and tracing.
+
+- And finally `Pre Response`, your chance to format a response to the consumer (which could be data or an error).
+
+## Using the middleware
+
+```javascript
+import Joi from 'joi'
+import lambcycle from 'lambcycle'
+import joiPlugin from 'lambcycle/dist/plugin-joi'
+import bodyParser from 'lambcycle/dist/plugin-body-parser'
+import realTimeEventTracker from './bugFreeBizLogic'
+
+const businessLogic = async(event, context) => {
+    const {error, data} = await realTimeEventTracker(event.data)
+
+    if(error) {
+        throw error
+    }
+
+    return data;
+};
+
+const schema = Joi.object().keys({
+    assetId: Joi.string().required(),
+    competition: Joi.string().required(),
+    sport: Joi.string(),
+    tournamentCalendar: Joi.date(),
+}).required()
+
+const handler = lambcycle(businessLogic)
+.register([
+    bodyParser({type: 'json'}),
+    joiPlugin(schema)
+])
+
+export default handler
+```
+
+The example above leverages [express' body parser](https://github.com/expressjs/body-parser) and [hapi's joi validation](https://github.com/hapijs/joi). We have configured both plugins with a parsing type and a validation schema respectively. By abstracting these two we have rid of complexity and shift the focus to the business logic. Note that a more robust lambda would include error tracing, and response plugins.
+
+## Crafting a Plugin
+
+The possibilities are endless when it comes to plugins! Do you have something in mind? [Contributions](https://github.com/juliantellez/lambcycle/blob/develop/contributing.md) are more than welcome ❤️
+
+```javascript
+import * as Sentry from '@sentry/node';
+import MyAwesomeIntegration from './MyAwesomeIntegration'
+
+const sentryPlugin = (config) => {
+    Sentry.init({
+        dsn: `https://${config.key}@sentry.io/${config.project}`,
+        integrations: [new MyAwesomeIntegration()]
+    });
+
+    return {
+        config,
+        plugin: {
+            onPreResponse: async (handlerWrapper, config) => {
+                Sentry.captureMessage('some percentile log perhaps?')
+            },
+            onError: async (handlerWrapper, config) => {
+                Sentry.captureException(handlerWrapper.error);
+            }
+        }
+    }
+}
+
+export default sentryPlugin;
+```
+In your lambda ....
+
+```javascript
+import lambcycle from 'lambcycle'
+import sentryPlugin from './sentryPlugin'
+
+const myApplicationLogic = async (event, context) => {
+    return await someLogic()
+}
+
+const handler = lambcycle(myApplicationLogic)
+.register([
+    sentryPlugin({
+        key: process.env.SENTRY_KEY,
+        project: process.env.SENTRY_PROJECT,
+    })
+]);
+
+export default handler;
+```
+
+# DX
+Lambcycle has been built with [developer experience "DX"](https://hackernoon.com/the-best-practices-for-a-great-developer-experience-dx-9036834382b0) in mind and ships with [type](https://www.typescriptlang.org) definitions, for consistency and auto-completion 🚀 (VScode only).
 
 <div align="center" style="padding: 15px">
     <img src="https://user-images.githubusercontent.com/4896851/51274743-db4db500-19c7-11e9-903c-cb50d127d933.gif" width=600>
@@ -64,5 +167,6 @@ Lambcycle is built with [developer experience "DX"](https://hackernoon.com/the-b
 
 ## Conclusion
 
-It is a brave new world and serverless is here to stay! Promoting reusable components and consistent error handling will help you and your team create and support features in an more controlled and organised fashion.
+It is a brave new world and serverless is here to stay! Promoting reusable components and consistent error handling will help you and your team create and support features in an more controlled and organised fashion. Lambcycle's main goals are to shift the conversation around a predictable unidirectional cycle and encouraging component reusability across features. Its worth mentioning that for more complex scenarios you should be looking at [Step functions](https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html). Let me know if you would like to know more about them in the comments, in the meantime check out these [use cases](https://aws.amazon.com/step-functions/use-cases/)!
 
+Special thanks to the legendary [burning monk](https://theburningmonk.com/) for the in-depth review of this article.
