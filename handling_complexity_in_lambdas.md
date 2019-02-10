@@ -1,34 +1,38 @@
+---
+title: Handling complexity in lambda functions
+published: true
+description: Middlewares can handle complexity for you.
+tags: lambda, aws-lambda, serverless, aws
+---
+
 # Handling complexity in lambda functions
-<p style="font-size:10px; text-align:right; margin: 0;">6st Feb 2019</p>
-<p style="font-size:10px; text-align:right">8min</p>
 
 ### TLDR;
-> Middlewares can handle the complexity of your lambdas while isolating business logic and cross-cutting concerns in reusable components that can be modeled by event cycles.
 
+> Middlewares can handle the complexity of your lambdas while isolating business logic and cross-cutting concerns in reusable components that can be modelled by event cycles.
 
-I have had the luck and pleasure of working with lambda functions recently and boy I am having fun! The idea of having an event driven execution environment is both daring and exciting.
+I have had the luck and pleasure of working with lambda functions recently and boy I am having fun! The idea of having an event-driven execution environment is both daring and exciting.
 
-If you are new to the FaaS world, don't worry, the community has already prepared a curated list of reads for you [here](https://github.com/anaibol/awesome-serverless) and [here](https://github.com/pmuens/awesome-serverless). Have a browse, drink some coffee.
+If you are new to the FaaS world, don't worry, the community has already prepared a curated list of reads for you [here](https://github.com/anaibol/awesome-serverless) and [here](https://github.com/pmuens/awesome-serverless). Have a browse, drink some coffee.  ☕
 
-As you can see, (because you checked at least one of the links, didn't you?) A huge weight has been lifted. We can now develop, run and manage applications without the intricacy of building and maintaining an infrastructure. But with new beginnings, new challenges arise. One of such problems and the reason of this blog is function complexity.
+As you can see, (because you checked at least one of the links, didn't you?) A huge weight has been lifted. We can now develop, run and manage applications without the intricacy of building and maintaining infrastructure. But with new beginnings, new challenges arise. One of such problems and the reason for this blog is function complexity.
 
 ## How complex is too complex?
 
 Generally speaking, when writing lambda functions you would organise them into a series of dedicated modules following the [single responsibility principle](https://en.wikipedia.org/wiki/Single_responsibility_principle). If you would rather do otherwise, please read this excellent blog comparing [monolithic vs single purposed functions](https://hackernoon.com/aws-lambda-should-you-have-few-monolithic-functions-or-many-single-purposed-functions-8c3872d4338f). Isolating application from business logic reduces code complexity, simplifies reasoning and will help you debug your code more efficiently. Your colleagues and your future self will thank you.
 
-Take for example some sort of CRUD API, we would like to make sure that a payload is properly formatted before handling any data. The payload validation could emit an error that would communicate a status to the consumer. If the validation was successful it would then move onto executing some business logic. For both scenarios we would also want to set up some percentile tracing and error loggings. While all of these sound great, we have essentially mapped out a request lifecycle with various [cross-cutting concerns](https://en.wikipedia.org/wiki/Cross-cutting_concern):
+Take for example some sort of CRUD API, we would like to make sure that a payload is properly formatted before handling any data. The payload validation could emit an error that would communicate its status to the consumer. If the validation was successful it would then move onto executing some business logic. For both scenarios, we would also want to set up some percentile tracing and error logging. While all of these sound great, we have essentially mapped out a request lifecycle with various [cross-cutting concerns](https://en.wikipedia.org/wiki/Cross-cutting_concern):
 
 - Data validation.
 - Error detection and correction.
 - Logging.
 - Monitoring.
 
-<div align="center" style="padding: 15px">
-    <img src="https://media.giphy.com/media/W96QyV2ACacGk/giphy.gif" height=200>
-</div>
+![](https://cdn-images-1.medium.com/max/1600/1*XT2_l9PLKtuZxKNGTYa4Uw.gif)
+*I know what you are thinking… (gif from giphy)*
 
-Following the serverless mantra, we should outsource anything that isn't related to the core business, so wouldn't it be great if we could just focus on the business logic and outsource these application specific problems too? 
-Of course this isn't a new concept and we have been using it in web frameworks like [hapijs](http://hapijs.com) and [express](https://expressjs.com) for quite sometime now.
+Following the serverless mantra, we should outsource anything that isn't related to the core business, so wouldn't it be great if we could just focus on the business logic and outsource these application-specific problems too?
+Of course, this isn't a new concept and we have been using it in web frameworks like [hapijs](http://hapijs.com) and [express](https://expressjs.com) for quite some time now.
 
 ## Lambda Middleware
 
@@ -40,28 +44,26 @@ A lambda [middleware](https://en.wikipedia.org/wiki/Middleware) is essentially a
  - Is logic intertwined and hard to reason about?
  - Does the project have a clear path or do you see it going in different directions?
  - How will the project look like the day the expert leaves?
- - Are best practices enforced and maintained?
+ - Are best-practices enforced and maintained?
 
-<div align="center" style="padding: 15px">
-    <img src="https://media.giphy.com/media/3sZlRwZfxAI8g/giphy.gif" height=200>
-</div>
+![](https://cdn.hashnode.com/res/hashnode/image/upload/v1549761422481/5LOA6J7hr.gif)
+*Jack Nicholson approves. (gif from giphy)*
 
 ## Enter Lambcycle
 
-[Lambcycle](https://github.com/juliantellez/lambcycle) 🐑 🛵 is a declarative middleware for lambda functions. It defines a configurable event cycle and allows you to focus on your application's logic. It has a "Feature as Plugin" approach, so you can easily create your own plugins or reuse your favorite packages with very little effort.
+[Lambcycle](https://github.com/juliantellez/lambcycle) 🐑 🛵 is a declarative middleware for lambda functions. It defines a configurable event cycle and allows you to focus on your application's logic. It has a "Feature as Plugin" approach, so you can easily create your own plugins or reuse your favourite packages with very little effort.
 
-In practice there is no such a thing as an un-opinionated framework, every idea is an opinion and a way of working with your application. Lambcycle favours configuration over code and believes that business logic should be as isolated as possible. 
+In practice there is no such thing as an un-opinionated framework, every idea is an opinion and a way of working with your application. Lambcycle favours configuration over the code and believes that business logic should be as isolated as possible.
 
-<div align="center" style="padding: 15px">
-    <img src="./assets/lambcycle-lifecycle.png" width=400>
-</div>
+![](https://cdn-images-1.medium.com/max/1600/1*5I_ZBcvd03ktQpGXuA2kgQ.png)
+*Labmcycle flow chart.*
 
 Lambcycle enhances lambda functions with a few extension points (see graph), each of which can be used to interact with the event in a decomposed manner.
 
 - The first extension point is `Request` which occurs immediately after the lambda is called. You can use this step for parsing, validation, etc...
-Note: If you are thinking of auth, please consider a [lambda authoriser](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-use-lambda-authorizer.html) instead. 
+Note: If you are thinking of auth, please consider a [lambda authoriser](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-use-lambda-authorizer.html) instead.
 
-- The `Pre Handler` extension comes in handy when you need to adapt data to fit an interface. Its also a great place for fetching secrets.
+- The `Pre Handler` extension comes in handy when you need to adapt data to fit an interface. It is also a great place for fetching secrets.
 
 - The `Handler`, where your beautiful business logic lives.
 
@@ -72,6 +74,7 @@ Note: If you are thinking of auth, please consider a [lambda authoriser](https:/
 - And finally `Pre Response`, your chance to format a response to the consumer (which could be data or an error).
 
 ## Using the middleware
+
 
 ```javascript
 import Joi from 'joi'
@@ -161,11 +164,10 @@ export default handler;
 # DX
 Lambcycle has been built with [developer experience "DX"](https://hackernoon.com/the-best-practices-for-a-great-developer-experience-dx-9036834382b0) in mind and ships with [type](https://www.typescriptlang.org) definitions, for consistency and auto-completion 🚀 (VScode only).
 
-<div align="center" style="padding: 15px">
-    <img src="https://user-images.githubusercontent.com/4896851/51274743-db4db500-19c7-11e9-903c-cb50d127d933.gif" width=600>
-</div>
+![](https://user-images.githubusercontent.com/4896851/51274743-db4db500-19c7-11e9-903c-cb50d127d933.gif)
+*Lambcycle DX.*
 
-## Conclusion
+# Conclusion
 
 It is a brave new world and serverless is here to stay! Promoting reusable components and consistent error handling will help you and your team create and support features in an more controlled and organised fashion. Lambcycle's main goals are to shift the conversation around a predictable unidirectional cycle and encouraging component reusability across features. Its worth mentioning that for more complex scenarios you should be looking at [Step functions](https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html). Let me know if you would like to know more about them in the comments, in the meantime check out these [use cases](https://aws.amazon.com/step-functions/use-cases/)!
 
